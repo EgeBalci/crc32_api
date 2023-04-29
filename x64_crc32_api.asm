@@ -1,9 +1,8 @@
 ;-----------------------------------------------------------------------------;
-; Author: Stephen Fewer, Ege Balcı (stephen_fewer[at]harmonysecurity[dot]com, egebalci[at]pm[dot]me)
-; Compatible: Windows 10, 8.1, 8, 7, 2008, Vista, 2003, XP, 2000, NT4
-; Version: 1.0 (18 May 2020)
+; Author: Ege Balcı (egebalci[at]pm[dot]me)
+; Version: 1.1 (29 April 2023)
 ; Architecture: x64
-; Size: 196 bytes
+; Size: 186 bytes
 ;-----------------------------------------------------------------------------;
 
 [BITS 64]
@@ -11,19 +10,17 @@
 ; Windows x64 calling convention:
 ; http://msdn.microsoft.com/en-us/library/9b372w95.aspx
 
-; Input: The hash of the API to call in r10d and all its parameters (rcx/rdx/r8/r9/any stack params)
-; Output: The return value from the API call will be in RAX.
-; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11
-; Un-Clobbered: RBX, RSI, RDI, RBP, R12, R13, R14, R15.
-;               RSP will be off by -40 hence the 'add rsp, 40' after each call to this function
+; Input: The CRC32 hash of the module and function name.
+; Output: The address of the function will be in RAX.
+; Clobbers: R10
+; Un-Clobbered: RAX, RCX, RDX, R8, R9, RBX, RSI, RDI, RBP, R12, R13, R14, R15.
 ; Note: This function assumes the direction flag has allready been cleared via a CLD instruction.
-; Note: This function is unable to call forwarded exports.
 
 api_call:
-  push r9                  ; Save the 4th parameter
-  push r8                  ; Save the 3rd parameter
-  push rdx                 ; Save the 2nd parameter
-  push rcx                 ; Save the 1st parameter
+  push r9                  ; Save R9
+  push r8                  ; Save R8
+  push rdx                 ; Save RDX
+  push rcx                 ; Save RCX
   push rsi                 ; Save RSI
   xor rdx, rdx             ; Zero rdx
   mov rdx, [gs:rdx+96]     ; Get a pointer to the PEB
@@ -92,15 +89,11 @@ finish:
   pop r8                   ; Clear off the current modules hash
   pop r8                   ; Clear off the current position in the module list
   pop rsi                  ; Restore RSI
-  pop rcx                  ; Restore the 1st parameter
-  pop rdx                  ; Restore the 2nd parameter
-  pop r8                   ; Restore the 3rd parameter
-  pop r9                   ; Restore the 4th parameter
-  pop r10                  ; Pop off the return address
-  sub rsp, 32              ; Reserve space for the four register params (4 * sizeof(QWORD) = 32)
-                           ; It is the callers responsibility to restore RSP if need be (or alloc more space or align RSP).
-  push r10                 ; Push back the return address
-  jmp rax                  ; Jump to required function
+  pop rcx                  ; Restore RCX
+  pop rdx                  ; Restore RDX
+  pop r8                   ; Restore R8
+  pop r9                   ; Restore R9
+  ret                      ; Return to caller with the function address inside RAX
   ; We now automagically return to the correct caller...
 get_next_mod:              ;
   pop rax                  ; Pop off the current (now the previous) modules EAT

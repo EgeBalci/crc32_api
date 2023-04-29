@@ -1,18 +1,17 @@
 ;-----------------------------------------------------------------------------;
-; Author: Stephen Fewer, Ege Balcı (stephen_fewer[at]harmonysecurity[dot]com, egebalci[at]pm[dot]me)
-; Compatible: Windows 10, 8.1, 8, 7, 2008, Vista, 2003, XP, 2000, NT4
-; Version: 1.0 (18 May 2020)
-; Size: 129 bytes
+; Author: Ege Balcı (egebalci[at]pm[dot]me)
+; Version: 1.1 (29 April 2023)
+; Architecture: x86
+; Size: 124 bytes
 ;-----------------------------------------------------------------------------;
 
 [BITS 32]
 
-; Input: The hash of the API to call and all its parameters must be pushed onto stack.
-; Output: The return value from the API call will be in EAX.
-; Clobbers: EAX, ECX and EDX (ala the normal stdcall calling convention)
+; Input: The CRC32 hash of the module and function name.
+; Output: The address of the function will be in EAX.
+; Clobbers: EAX (caller needs to clear the hash on the stack)
 ; Un-Clobbered: EBX, ESI, EDI, ESP and EBP can be expected to remain un-clobbered.
 ; Note: This function assumes the direction flag has allready been cleared via a CLD instruction.
-; Note: This function is unable to call forwarded exports.
 
 api_call:
   pushad                 ; We preserve all the registers for the caller, bar EAX and ECX.
@@ -82,11 +81,7 @@ finish:
   pop ebx                ; Clear off the current modules hash
   pop ebx                ; Clear off the current position in the module list
   popad                  ; Restore all of the callers registers, bar EAX, ECX and EDX which are clobbered
-  pop ecx                ; Pop off the origional return address our caller will have pushed
-  pop edx                ; Pop off the hash value our caller will have pushed
-  push ecx               ; Puh back the return address
-  jmp eax                ; Properly call the required function for EAF bypass
-  ret
+  ret                    ; Return to the caller with function address inside EAX
   ; We now automagically return to the correct caller...
 
 get_next_mod:            ;
