@@ -2,7 +2,7 @@
 ; Author: Ege Balcı (egebalci[at]pm[dot]me)
 ; Version: 1.1 (29 April 2023)
 ; Architecture: x64
-; Size: 186 bytes
+; Size: 192 bytes
 ;-----------------------------------------------------------------------------;
 
 [BITS 64]
@@ -13,8 +13,10 @@
 ; Input: The CRC32 hash of the module and function name.
 ; Output: The address of the function will be in RAX.
 ; Clobbers: R10
-; Un-Clobbered: RAX, RCX, RDX, R8, R9, RBX, RSI, RDI, RBP, R12, R13, R14, R15.
+; Un-Clobbered: RCX, RDX, R8, R9, RBX, RSI, RDI, RBP, R12, R13, R14, R15.
 ; Note: This function assumes the direction flag has allready been cleared via a CLD instruction.
+
+%define CRC32_SEED 0x00
 
 api_call:
   push r9                  ; Save R9
@@ -30,6 +32,7 @@ next_mod:                  ;
   mov rsi, [rdx+80]        ; Get pointer to modules name (unicode string)
   movzx rcx, word [rdx+74] ; Set rcx to the length we want to check 
   xor r9, r9               ; Clear r9 which will store the hash of the module name
+  mov r9, CRC32_SEED       ; Set the initial CRC32 seed value
 loop_modname:              ;
   xor rax, rax             ; Clear RAX
   lodsb                    ; Read in the next byte of the name

@@ -9,6 +9,8 @@
 from sys import path
 import os, time, sys, crcmod
 
+CRC32_SEED=0
+
 def unicode( string, uppercase=True ):
   result = "";
   if uppercase:
@@ -18,7 +20,7 @@ def unicode( string, uppercase=True ):
   return result
 #=============================================================================#
 def hash( module, function, bits=13, print_hash=True ):
-  crc32_func = crcmod.mkCrcFun(0x11EDC6F41, initCrc=0, xorOut=0)
+  crc32_func = crcmod.mkCrcFun(0x11EDC6F41, initCrc=CRC32_SEED, xorOut=0)
   h = crc32_func((unicode(module)+function+"\x00").encode('utf-8'))
   print("[+] 0x%08X = %s!%s" % ( h, module.lower(), function ))
   return h

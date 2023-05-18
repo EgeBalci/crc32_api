@@ -2,7 +2,7 @@
 ; Author: Ege Balcı (egebalci[at]pm[dot]me)
 ; Version: 1.1 (29 April 2023)
 ; Architecture: x86
-; Size: 124 bytes
+; Size: 129 bytes
 ;-----------------------------------------------------------------------------;
 
 [BITS 32]
@@ -12,6 +12,8 @@
 ; Clobbers: EAX (caller needs to clear the hash on the stack)
 ; Un-Clobbered: EBX, ESI, EDI, ESP and EBP can be expected to remain un-clobbered.
 ; Note: This function assumes the direction flag has allready been cleared via a CLD instruction.
+
+%define CRC32_SEED 0x00
 
 api_call:
   pushad                 ; We preserve all the registers for the caller, bar EAX and ECX.
@@ -24,6 +26,7 @@ next_mod:                ;
   mov esi, [edx+40]      ; Get pointer to modules name (unicode string)
   movzx ecx, word [edx+38] ; Set ECX to the length we want to check
   xor edi, edi           ; Clear EDI which will store the hash of the module name
+  mov edi, CRC32_SEED    ; Set the initial CRC32 seed value
 loop_modname:            ;
   lodsb                  ; Read in the next byte of the name
   cmp al, 'a'            ; Some versions of Windows use lower case module names
